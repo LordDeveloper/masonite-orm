@@ -1487,19 +1487,31 @@ class QueryBuilder(ObservesEvents):
 
         if model and model.is_loaded():
             self.where(model.get_primary_key(), model.get_primary_key_value())
-            additional.update({model.get_primary_key(): model.get_primary_key_value()})
+            additional.update({
+                model.get_primary_key(): model.get_primary_key_value(),
+                column: int(model.__original_attributes__.get(column, 0)) + abs(value)
+            })
 
+            model.fill(additional)
             self.observe_events(model, "updating")
 
         self._updates += (
             UpdateQueryExpression(column, value, update_type="increment"),
         )
-
         self.set_action("update")
-        results = self.new_connection().query(self.to_qmark(), self._bindings)
+
+        if self.dry:
+            return self
+
+        result = self.new_connection().query(self.to_qmark(), self._bindings)
         processed_results = self.get_processor().get_column_value(
-            self, column, results, id_key, id_value
+            self, column, result, id_key, id_value
         )
+        if model:
+            additional[column] = processed_results
+            model.fill_original(additional)
+            self.observe_events(model, "updated")
+
         return processed_results
 
     def decrement(self, column, value=1):
@@ -1526,8 +1538,12 @@ class QueryBuilder(ObservesEvents):
 
         if model and model.is_loaded():
             self.where(model.get_primary_key(), model.get_primary_key_value())
-            additional.update({model.get_primary_key(): model.get_primary_key_value()})
+            additional.update({
+                model.get_primary_key(): model.get_primary_key_value(),
+                column: int(model.__original_attributes__.get(column, 0)) - abs(value)
+            })
 
+            model.fill(additional)
             self.observe_events(model, "updating")
 
         self._updates += (
@@ -1535,10 +1551,19 @@ class QueryBuilder(ObservesEvents):
         )
 
         self.set_action("update")
+
+        if self.dry:
+            return self
+
         result = self.new_connection().query(self.to_qmark(), self._bindings)
         processed_results = self.get_processor().get_column_value(
             self, column, result, id_key, id_value
         )
+
+        if model:
+            additional[column] = processed_results
+            model.fill_original(additional)
+            self.observe_events(model, "updated")
         return processed_results
 
     def sum(self, column):

@@ -1424,16 +1424,16 @@ class QueryBuilder(ObservesEvents):
         if len(updates.keys()) == 0:
             return model if model else self
 
-        if model:
-            model.fill(updates)
-            self.observe_events(model, "updating")
-
         self._updates = (UpdateQueryExpression(updates),)
         self.set_action("update")
         if dry or self.dry:
             return self
 
         additional.update(updates)
+
+        if model:
+            model.fill(updates)
+            self.observe_events(model, "updating")
 
         self.new_connection().query(self.to_qmark(), self._bindings)
         if model:

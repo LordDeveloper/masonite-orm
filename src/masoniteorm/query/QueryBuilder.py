@@ -39,17 +39,17 @@ class QueryBuilder(ObservesEvents):
     """A builder class to manage the building and creation of query expressions."""
 
     def __init__(
-        self,
-        grammar=None,
-        connection="default",
-        connection_class=None,
-        table=None,
-        connection_details=None,
-        connection_driver="default",
-        model=None,
-        scopes=None,
-        schema=None,
-        dry=False,
+            self,
+            grammar=None,
+            connection="default",
+            connection_class=None,
+            table=None,
+            connection_details=None,
+            connection_driver="default",
+            model=None,
+            scopes=None,
+            schema=None,
+            dry=False,
     ):
         """QueryBuilder initializer
 
@@ -367,14 +367,12 @@ class QueryBuilder(ObservesEvents):
             )
 
         if attribute in self._scopes:
-
             def method(*args, **kwargs):
                 return self._scopes[attribute](self._model, self, *args, **kwargs)
 
             return method
 
         if attribute in self._macros:
-
             def method(*args, **kwargs):
                 return self._macros[attribute](self._model, self, *args, **kwargs)
 
@@ -618,7 +616,6 @@ class QueryBuilder(ObservesEvents):
             )
         elif isinstance(column, dict):
             for key, value in column.items():
-
                 self._wheres += ((QueryExpression(key, "=", value, "value")),)
         elif isinstance(value, QueryBuilder):
             self._wheres += (
@@ -899,7 +896,6 @@ class QueryBuilder(ObservesEvents):
     def chunk(self, chunk_amount):
         chunk_connection = self.new_connection()
         for result in chunk_connection.select_many(self.to_sql(), (), chunk_amount):
-
             yield self.prepare_result(result)
 
     def where_not_null(self, column: str):
@@ -1257,7 +1253,7 @@ class QueryBuilder(ObservesEvents):
         return self
 
     def join(
-        self, table: str, column1=None, equality=None, column2=None, clause="inner"
+            self, table: str, column1=None, equality=None, column2=None, clause="inner"
     ):
         """Specifies a join expression.
 
@@ -1408,15 +1404,13 @@ class QueryBuilder(ObservesEvents):
             self.where(model.get_primary_key(), model.get_primary_key_value())
             additional.update({model.get_primary_key(): model.get_primary_key_value()})
 
-            self.observe_events(model, "updating")
-
         # update only attributes with changes
         if model and not model.__force_update__ and not force:
             changes = {}
             for attribute, value in updates.items():
                 if (
-                    model.__original_attributes__.get(attribute, None) != value
-                    or value is None
+                        model.__original_attributes__.get(attribute, None) != value
+                        or value is None
                 ):
                     changes.update({attribute: value})
             updates = changes
@@ -1430,6 +1424,10 @@ class QueryBuilder(ObservesEvents):
         if len(updates.keys()) == 0:
             return model if model else self
 
+        if model:
+            model.fill(updates)
+            self.observe_events(model, "updating")
+
         self._updates = (UpdateQueryExpression(updates),)
         self.set_action("update")
         if dry or self.dry:
@@ -1439,9 +1437,8 @@ class QueryBuilder(ObservesEvents):
 
         self.new_connection().query(self.to_qmark(), self._bindings)
         if model:
-            model.fill(updates)
-            self.observe_events(model, "updated")
             model.fill_original(updates)
+            self.observe_events(model, "updated")
             return model
         return additional
 
@@ -1884,9 +1881,9 @@ class QueryBuilder(ObservesEvents):
             # eager load here
             hydrated_model = self._model.hydrate(result)
             if (
-                self._eager_relation.eagers
-                or self._eager_relation.nested_eagers
-                or self._eager_relation.callback_eagers
+                    self._eager_relation.eagers
+                    or self._eager_relation.nested_eagers
+                    or self._eager_relation.callback_eagers
             ) and hydrated_model:
                 for eager_load in self._eager_relation.get_eagers():
                     if isinstance(eager_load, dict):
@@ -1936,7 +1933,7 @@ class QueryBuilder(ObservesEvents):
             return result or None
 
     def _register_relationships_to_model(
-        self, related, related_result, hydrated_model, relation_key
+            self, related, related_result, hydrated_model, relation_key
     ):
         """Takes a related result and a hydrated model and registers them to eachother using the relation key.
 

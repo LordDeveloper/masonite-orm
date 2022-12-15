@@ -529,7 +529,7 @@ class QueryBuilder(ObservesEvents):
                 d = {}
                 for x in self._creates:
                     if x in self._creates:
-                        model.__dirty_attributes__.update({attribute: value})
+                        model.__dirty_attributes__.update({x: self._creates[x]})
 
                         if kwargs.get("cast") == True:
                             d.update(

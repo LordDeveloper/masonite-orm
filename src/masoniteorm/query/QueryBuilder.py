@@ -529,6 +529,8 @@ class QueryBuilder(ObservesEvents):
                 d = {}
                 for x in self._creates:
                     if x in self._creates:
+                        model.__dirty_attributes__.update({attribute: value})
+
                         if kwargs.get("cast") == True:
                             d.update(
                                 {x: self._model._set_casted_value(x, self._creates[x])}
@@ -1415,6 +1417,8 @@ class QueryBuilder(ObservesEvents):
                         model.__original_attributes__.get(attribute, None) != value
                         or value is None
                 ):
+                    model.__dirty_attributes__.update({attribute: value})
+
                     changes.update({attribute: value})
             updates = changes
 

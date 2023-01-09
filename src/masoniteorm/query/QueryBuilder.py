@@ -1442,7 +1442,7 @@ class QueryBuilder(ObservesEvents):
             model.fill(updates)
             self.observe_events(model, "updating")
             for attribute, value in model.__dirty_attributes__.items():
-                if updates.get(attribute, None) != value or value is None:
+                if attribute != "builder" and updates.get(attribute, None) != value or value is None:
                     if cast:
                         value = model._set_casted_value(attribute, value)
 

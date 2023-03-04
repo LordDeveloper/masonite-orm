@@ -490,7 +490,7 @@ class QueryBuilder(ObservesEvents):
 
         return processed_results
 
-    def create(self, creates=None, query=False, id_key="id", **kwargs):
+    def create(self, creates=None, query=False, id_key="id", quietly = False, **kwargs):
         """Specifies a dictionary that should be used to create new values.
 
         Arguments:
@@ -517,7 +517,7 @@ class QueryBuilder(ObservesEvents):
 
         if model:
             model = model.hydrate(self._creates)
-            self.observe_events(model, "creating")
+            not quietly and self.observe_events(model, "creating")
 
             # if attributes were modified during model observer then we need to update the creates here
             self._creates.update(model.get_dirty_attributes())
@@ -552,7 +552,7 @@ class QueryBuilder(ObservesEvents):
 
         if model:
             model = model.fill(processed_results)
-            self.observe_events(model, "created")
+            not quietly and self.observe_events(model, "created")
             return model
 
         return processed_results
@@ -560,7 +560,7 @@ class QueryBuilder(ObservesEvents):
     def hydrate(self, result, relations=None):
         return self._model.hydrate(result, relations)
 
-    def delete(self, column=None, value=None, query=False):
+    def delete(self, column=None, value=None, query=False, quietly = False):
         """Specify the column and value to delete
         or deletes everything based on a previously used where expression.
 
@@ -588,12 +588,12 @@ class QueryBuilder(ObservesEvents):
 
         if model and model.is_loaded():
             self.where(model.get_primary_key(), model.get_primary_key_value())
-            self.observe_events(model, "deleting")
+            not quietly and self.observe_events(model, "deleting")
 
         result = self.new_connection().query(self.to_qmark(), self._bindings)
 
         if model:
-            self.observe_events(model, "deleted")
+            not quietly and self.observe_events(model, "deleted")
 
         return result
 
@@ -1383,7 +1383,7 @@ class QueryBuilder(ObservesEvents):
         """Alias for limit method"""
         return self.offset(*args, **kwargs)
 
-    def update(self, updates: dict, cast=False, dry=False, force=False):
+    def update(self, updates: dict, cast=False, dry=False, force=False, quietly=False):
         """Specifies columns and values to be updated.
 
         Arguments:
@@ -1438,9 +1438,9 @@ class QueryBuilder(ObservesEvents):
 
         additional.update(updates)
 
-        if model:
+        if model and model.is_loaded():
             model.fill(updates)
-            self.observe_events(model, "updating")
+            not quietly and self.observe_events(model, "updating")
             for attribute, value in model.__dirty_attributes__.items():
                 if attribute != "builder" and updates.get(attribute, None) != value or value is None:
                     if cast:
@@ -1451,7 +1451,7 @@ class QueryBuilder(ObservesEvents):
         self.new_connection().query(self.to_qmark(), self._bindings)
         if model:
             model.fill_original(updates)
-            self.observe_events(model, "updated")
+            not quietly and self.observe_events(model, "updated")
             return model
         return additional
 
@@ -1473,7 +1473,7 @@ class QueryBuilder(ObservesEvents):
         self._updates += (UpdateQueryExpression(updates),)
         return self
 
-    def increment(self, column, value=1):
+    def increment(self, column, value=1, quietly = False):
         """Increments a column's value.
 
         Arguments:
@@ -1503,7 +1503,7 @@ class QueryBuilder(ObservesEvents):
             })
 
             model.fill(additional)
-            self.observe_events(model, "updating")
+            not quietly and self.observe_events(model, "updating")
 
         self._updates += (
             UpdateQueryExpression(column, value, update_type="increment"),
@@ -1520,11 +1520,11 @@ class QueryBuilder(ObservesEvents):
         if model:
             additional[column] = processed_results
             model.fill_original(additional)
-            self.observe_events(model, "updated")
+            not quietly and self.observe_events(model, "updated")
 
         return processed_results
 
-    def decrement(self, column, value=1):
+    def decrement(self, column, value=1, quietly = False):
         """Decrements a column's value.
 
         Arguments:
@@ -1554,7 +1554,7 @@ class QueryBuilder(ObservesEvents):
             })
 
             model.fill(additional)
-            self.observe_events(model, "updating")
+            not quietly and self.observe_events(model, "updating")
 
         self._updates += (
             UpdateQueryExpression(column, value, update_type="decrement"),
@@ -1573,7 +1573,7 @@ class QueryBuilder(ObservesEvents):
         if model:
             additional[column] = processed_results
             model.fill_original(additional)
-            self.observe_events(model, "updated")
+            not quietly and self.observe_events(model, "updated")
         return processed_results
 
     def sum(self, column):
